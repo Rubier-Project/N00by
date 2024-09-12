@@ -1,4 +1,3 @@
-import socket
 from flask import Flask, request, jsonify
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from db.manager import ( GroupManager, UserManager, ChatManager, trimPhoneumber, sendCode, agreeCode )
@@ -13,7 +12,6 @@ app = Flask(__name__)
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-os.system("")
 logging.basicConfig(level=logging.INFO)
 
 user_sessions = {}
@@ -181,7 +179,7 @@ def on_chats(data: dict):
         handler = Handler(chatManager=ChatManager(UserManager()), userManager=user_manager)
         result = handler.getChats(username, token)
         if not result['status'] == "OK":emit("error", {"message": result['status']})
-        else:emit("chats", result['result'], to=request.sid)
+        else:emit("getChats", result['result'], to=request.sid)
     except Exception as ERROR:
         emit("error", {"message": str(ERROR)}, to=request.sid)
 
@@ -427,7 +425,10 @@ def handle_add_member(data):
 @socketio.on('typing')
 def typingHandler(data):
     try:
-        emit('typing', data.get(data), to=request.sid)
+        print(user_sessions)
+        emit('typing', {
+            'typing': 'Typing is...'
+        }, to=user_sessions[data.get('target')])
     except Exception as e:
         logging.error(f"Error in typingError: {str(e)}")
         emit('error', {'message': str(e)})
@@ -440,10 +441,10 @@ def handle_connect():
 @socketio.on('disconnect')
 def handle_disconnect():
     logging.info(f"Client disconnected. SID: {request.sid}")
-    for username, token, sid in user_sessions.items():
+    for username, sid in user_sessions.items():
         if sid == request.sid:
             leave_room(username)
-            logging.info(f"User {username} disconnected and left room {token}")
+            logging.info(f"User {username} disconnected and left room")
             del user_sessions[username]
             break
 

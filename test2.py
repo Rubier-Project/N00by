@@ -16,6 +16,10 @@ def receive_private_message(data):
     print(f"User1 received: {data['message']}")
 
 @sio.event
+def typing(data):
+    print("typing : ", data)
+
+@sio.event
 def authenticated(data):
     print(data)
 
@@ -33,6 +37,9 @@ def disconnect():
 def send_messages():
     while True:
         message = input("Enter your message: ")
+        sio.emit('typing', {
+            'target': 'CipherX'
+        })
         if message.lower() == 'exit':
             break 
         sio.emit('sendMessage', {

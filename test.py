@@ -8,9 +8,7 @@ sio = socketio.Client()
 def connect():
     print('Connected to server as User1')
     sio.emit('authenticate', data={'username': 'CipherX', 'token': 'LliwiDOg7G1t8Wr9Ll0-OPzh7pwWz25noJrCAsLRalw'})
-    getUser('CipherX', 'LliwiDOg7G1t8Wr9Ll0-OPzh7pwWz25noJrCAsLRalw')
-    getChat('CipherX', '12', 'LliwiDOg7G1t8Wr9Ll0-OPzh7pwWz25noJrCAsLRalw')
-    #disconnect('Cipher', 'LliwiDOg7G1t8Wr9Ll0-OPzh7pwWz25noJrCAsLRalw')
+    send_messages()
 
 @sio.event
 def receive_private_message(data):
@@ -24,6 +22,9 @@ def authenticated(data):
 def error(data):
     print(data)
 
+@sio.event
+def typing(data):
+    print("typing : ", data)
 
 @sio.event
 def chats(data):
@@ -38,8 +39,8 @@ def getChat(data):
     print("getChat : ", data)
 
 @sio.event
-def disconnect(data):
-    print('Disconnected from server :', data)
+def disconnect():
+    print('Disconnected from server :')
 
 
 def getChats(username, token):
@@ -57,6 +58,9 @@ def disconnect(username, token):
 def send_messages():
     while True:
         message = input("Enter your message: ")
+        sio.emit('typing', {
+            'target': 'X1'
+        })
         if message.lower() == 'exit':
             break 
         sio.emit('sendMessage', {
