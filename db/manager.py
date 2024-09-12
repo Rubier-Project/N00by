@@ -259,6 +259,11 @@ class ChatManager:
                 'status': 'OK',
                 'chats': chats[target_username]
             }
+        else:
+            return {
+                'status': 'ERROR',
+                'message': 'NOT_FOUND_CHAT'
+            }
 
     def _update_chats(self, username, chats):
         with self.db.connection:

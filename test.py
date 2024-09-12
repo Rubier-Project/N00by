@@ -9,7 +9,7 @@ def connect():
     print('Connected to server as User1')
     sio.emit('authenticate', data={'username': 'CipherX', 'token': 'LliwiDOg7G1t8Wr9Ll0-OPzh7pwWz25noJrCAsLRalw'})
     getUser('CipherX', 'LliwiDOg7G1t8Wr9Ll0-OPzh7pwWz25noJrCAsLRalw')
-    getChat('CipherX', 'X1', 'LliwiDOg7G1t8Wr9Ll0-OPzh7pwWz25noJrCAsLRalw')
+    getChat('CipherX', '12', 'LliwiDOg7G1t8Wr9Ll0-OPzh7pwWz25noJrCAsLRalw')
     #send_messages() 
 
 @sio.event
@@ -18,6 +18,10 @@ def receive_private_message(data):
 
 @sio.event
 def authenticated(data):
+    print(data)
+
+@sio.event
+def error(data):
     print(data)
 
 
