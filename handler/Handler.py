@@ -1,4 +1,4 @@
-from utlis.encrypt import CryptoServer
+from meta.encrypt import CryptoServer
 from db.manager import ChatManager, UserManager, GroupManager
 import logging, random
 from datetime import datetime
@@ -19,11 +19,16 @@ class Handler:
     def getUsernameByID(self, username: str, token: str, getUser: str):
         return self.userManager.getUsernameByID(username=username, auth_token=token, getUser=getUser)
     
-    # def getGroupByID(self, username: str, token: str, group_name: str):
-    #     return self.groupManager.get_group_info(username=username, token=token, group_name=group_name)
-    
+    def getChatsUser(self, username: str, target_user, token: str):
+        if self.userManager.authenticate_user(username, auth_token=token).get('status') == 'OK':
+            return {'status': 'OK', 'result': self.chatManager.getChats(username=username, target_username=target_user)}
+        else:
+            return self.userManager.authenticate_user(username, auth_token=token)
     def getChats(self, username: str, token: str):
-        return self.chatManager.getUserList(username=username, auth_token=token)
+        if self.userManager.authenticate_user(username, auth_token=token).get('status') == 'OK':
+            return {'status': 'OK', 'result': self.chatManager._get_chats(username=username)}
+        else:
+            return self.userManager.authenticate_user(username, auth_token=token)
     
     def getMembersList(self, group_name: str):
         return self.groupManager.get_group_members(group_name=group_name)    
@@ -139,7 +144,7 @@ class Handler:
             timestamp = datetime.now(pytz.timezone('Asia/Tehran')).strftime("%H:%M")
             message_id = random.randint(1000, 9000000)
 
-            self.chatManager.add_private_message(from_user, to_user, message, timestamp, message_id, reply_data)
+            self.chatManager.sendMessage(from_user, to_user, message, message_id, timestamp, reply_data)
 
             return {
                 'status': 'success',

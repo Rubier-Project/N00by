@@ -1,3 +1,0 @@
-class Method:
-    api = '/api'
-

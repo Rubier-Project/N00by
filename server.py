@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from db.manager import ( GroupManager, UserManager, ChatManager, trimPhoneumber, sendCode, agreeCode )
 from handler.Handler import Handler
-from utlis.encrypt import CryptoServer
+from meta.encrypt import CryptoServer
 from flask_cors import CORS
 import time
 import logging
@@ -76,6 +76,7 @@ def handle_register(data: dict):
                 else:emit("error", {"message": objects['message']}, to=request.sid)
             else:
                 objects = agreeCode(phone, data.get("code"))
+                print("CODE ", objects)
                 if not objects['error']:
                     if objects['ok']:
                         user_manager = UserManager()
@@ -136,7 +137,7 @@ def handle_user_info(data: dict):
         result = handler.getUserInfo(username, token)
 
         if not result['status'] == "OK":emit("error", {"message": result['status']})
-        else:emit("user_info", result['user'], to=request.sid)
+        else:emit("user_info", result, to=request.sid)
 
     except Exception as ERROR:
         emit("error", {"message": str(ERROR)}, to=request.sid)
@@ -157,6 +158,20 @@ def handle_username_by_id(data: dict):
     except Exception as ERROR:
         emit("error", {"message": str(ERROR)}, to=request.sid)
 
+@socketio.on("getChat")
+def on_chat_user(data: dict):
+    try:
+        user_manager = UserManager()
+        username = data.get('username')
+        target_user = data.get('target_user')
+        token = data.get('token')
+        handler = Handler(chatManager=ChatManager(UserManager()), userManager=user_manager)
+        result = handler.getChatsUser(username, target_user, token)
+        if not result['status'] == "OK":emit("error", {"message": result['status']})
+        else:emit("getChat", result['result'], to=request.sid)
+    except Exception as ERROR:
+        emit("error", {"message": str(ERROR)}, to=request.sid)
+
 @socketio.on("getChats")
 def on_chats(data: dict):
     try:
@@ -165,10 +180,8 @@ def on_chats(data: dict):
         token = data.get('token')
         handler = Handler(chatManager=ChatManager(UserManager()), userManager=user_manager)
         result = handler.getChats(username, token)
-
         if not result['status'] == "OK":emit("error", {"message": result['status']})
-        else:emit("chats", result['users'], to=request.sid)
-
+        else:emit("chats", result['result'], to=request.sid)
     except Exception as ERROR:
         emit("error", {"message": str(ERROR)}, to=request.sid)
 
@@ -176,8 +189,6 @@ def on_chats(data: dict):
 def get_members_list(data: dict):
     try:
         user_manager = UserManager()
-        username = data.get('username')
-        token = data.get('token')
         group_name = data.get("group_name", "")
         handler = Handler(chatManager=ChatManager(UserManager()), userManager=user_manager)
         result = handler.getMembersList(group_name)
@@ -413,22 +424,28 @@ def handle_add_member(data):
         logging.error(f"Error in handle_get_group_messages: {str(e)}")
         emit('error', {'message': str(e)})
 
+@socketio.on('typing')
+def typingHandler(data):
+    try:
+        emit('typing', data.get(data), to=request.sid)
+    except Exception as e:
+        logging.error(f"Error in typingError: {str(e)}")
+        emit('error', {'message': str(e)})
+
 @socketio.on('connect')
 def handle_connect():
     logging.info(f"Client connected with SID: {request.sid}")
-    emit('handshake', {'message': 'Please authenticate with username and token'}, to=request.sid)
+    emit('handshake', {'message': 'connect'}, to=request.sid)
 
 @socketio.on('disconnect')
 def handle_disconnect():
     logging.info(f"Client disconnected. SID: {request.sid}")
     for username, sid in user_sessions.items():
         if sid == request.sid:
-            user_manager = UserManager()
-            user_manager.online(username=username, auth_token=user_manager.users[username]['token'], status='offline')
             del user_sessions[username]
             leave_room(username)
             logging.info(f"User {username} disconnected and left room {username}")
             break
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, host='0.0.0.0', port=8080)
+    socketio.run(app, debug=True, host='127.0.0.1', port=8080)
