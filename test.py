@@ -10,7 +10,7 @@ def connect():
     sio.emit('authenticate', data={'username': 'CipherX', 'token': 'LliwiDOg7G1t8Wr9Ll0-OPzh7pwWz25noJrCAsLRalw'})
     getUser('CipherX', 'LliwiDOg7G1t8Wr9Ll0-OPzh7pwWz25noJrCAsLRalw')
     getChat('CipherX', '12', 'LliwiDOg7G1t8Wr9Ll0-OPzh7pwWz25noJrCAsLRalw')
-    #send_messages() 
+    disconnect('CipherX', 'LliwiDOg7G1t8Wr9Ll0-OPzh7pwWz25noJrCAsLRalw')
 
 @sio.event
 def receive_private_message(data):
@@ -51,6 +51,8 @@ def getChat(username, target_user, token):
 def getUser(username, token):
     sio.emit('getUserInfo', {'username': username, 'token': token})
 
+def disconnect(username, token):
+    sio.emit('disconnect', {'username': username, 'token': token})
 
 def send_messages():
     while True:

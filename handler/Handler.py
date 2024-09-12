@@ -116,8 +116,6 @@ class Handler:
                 return {"data_enc": self.login(username=data['username'], phone_number=data['phone_number'], token=data['token'])}               
             elif method == 'getUsernameByID':
                 return {"data_enc": self.getUsernameByID(username=data['username'], token=data['token'], getUser=data['getUser'])}
-            # elif method == 'getGroupByID':
-            #     return {"data_enc": self.getGroupByID(username=data['username'], token=data['token'], group_name=data['group_name'])}
             elif method == 'getMessages':
                 return {"data_enc": hash.encrypt(str(self.getMessages(username=data['username'], token=data['token'], user=data['user'])))}
             elif method == 'updateProfile':

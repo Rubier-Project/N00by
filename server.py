@@ -167,7 +167,7 @@ def on_chat_user(data: dict):
         token = data.get('token')
         handler = Handler(chatManager=ChatManager(UserManager()), userManager=user_manager)
         result = handler.getChatsUser(username, target_user, token)
-        if not result['status'] == "OK":emit("error", {"message": result['status']})
+        if not result['status'] == "OK":emit("error", {"message": result})
         else:emit("getChat", result['result'], to=request.sid)
     except Exception as ERROR:
         emit("error", {"message": str(ERROR)}, to=request.sid)
@@ -438,14 +438,24 @@ def handle_connect():
     emit('handshake', {'message': 'connect'}, to=request.sid)
 
 @socketio.on('disconnect')
-def handle_disconnect():
+def handle_disconnect(data):
     logging.info(f"Client disconnected. SID: {request.sid}")
     for username, sid in user_sessions.items():
         if sid == request.sid:
-            del user_sessions[username]
-            leave_room(username)
-            logging.info(f"User {username} disconnected and left room {username}")
-            break
+            userManager = UserManager()
+            if userManager.authenticate_user(username=data.get('username'), auth_token=data.get('token'))['status'] == "OK":
+                userManager.online(username=data.get('username'), auth_token=data.get('token'))
+                emit('disconnect', {'status': 'DISCONNECT_OK', 'data': {
+                    'Username': data.get('username'),
+                    'Token': data.get('token'),
+                    'StatusUser': 'OFFLINE'
+                }} ,to=request.sid)
+                leave_room(username)
+                logging.info(f"User {username} disconnected and left room {username}")
+                del user_sessions[username]
+                break
+            else:
+                emit('disconnect', {'status': 'DISCONNECT_ERROR', 'error': {}})
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, host='127.0.0.1', port=8080)
