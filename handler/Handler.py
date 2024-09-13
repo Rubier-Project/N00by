@@ -99,6 +99,9 @@ class Handler:
             return {'status': 'OK', 'data': self.groupManager.remove_member_from_group(group_name, target_username)}
         else:
             return {'status': 'TOKEN_INVALID | NOT_FOUND'}
+        
+    def searchUserByUsername(self, username: str, token: str, user_username: str):
+        return self.userManager.searchUserByUsername(username, token, user_username)
 
     def methodNum(self, method: str, data: dict, hash: CryptoServer):
         try:

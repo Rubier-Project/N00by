@@ -433,6 +433,25 @@ def typingHandler(data):
         logging.error(f"Error in typingError: {str(e)}")
         emit('error', {'message': str(e)})
 
+@socketio.on("searchUserByUsername")
+def searching_handler(data: dict):
+    try:
+        user_manager = UserManager()
+        username = data.get('username')
+        token = data.get('token')
+        user_name = data.get('user_username')
+        handler = Handler(chatManager=ChatManager(UserManager()), userManager=user_manager)
+        
+        result = handler.searchUserByUsername(username=username, token=token, user_username=user_name)
+        if result['status'] == "OK":
+            emit("researched_users", result['user'], to=request.sid)
+        else:
+            emit("error", {"message": result['status']})
+    except Exception as ERROR:
+        err = str(ERROR)
+        logging.error(f"Error in searching_handler: {err}")
+        emit("error", {"message": err})
+
 @socketio.on('connect')
 def handle_connect():
     logging.info(f"Client connected with SID: {request.sid}")

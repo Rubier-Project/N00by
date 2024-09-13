@@ -120,13 +120,13 @@ class UserManager:
 
         try:
             is_username = self.username_access(username)['status']
-            # is_phone = self.phone_access(trimPhoneumber(phone))['status']
+            is_phone = self.phone_access(trimPhoneumber(phone))['status']
 
             if is_username == "OK":
                 return {"status": "USERNAME_EXISTS"}
             
-            # if is_phone == "OK":
-            #     return {"status": "PHONE_NUMBER_EXISTS"}
+            if is_phone == "OK":
+                return {"status": "PHONE_NUMBER_EXISTS"}
 
             auth_token = self.generate_auth_token()
             with self.db.connection:
@@ -226,6 +226,21 @@ class UserManager:
                 return {'status': 'OK', 'user': {'fullname': user[2], 'bio': user[4], 'username': getUser, 'profile': user[5], 'status': user[3], 'admin': user[6]}}
             else:
                 return {'status': 'USER_NOT_FOUND', 'user': {}}
+        else:
+            return {'status': 'TOKEN_INVALID | NOT_FOUND', 'user': {}}
+        
+    def searchUserByUsername(self, username, auth_token, user_username):
+        if self.authenticate_user(username, auth_token)['status'] == 'OK':
+            users = self.db.cursor.execute("SELECT * FROM users").fetchall()
+            researched_users = []
+
+            for user in users:
+                if str(user[0]).startswith(user_username) or str(user[0]) == user_username:
+                    researched_users.append(user)
+                    
+            if len(researched_users) == 0:
+                return {"status": "USER_NOT_FOUND", "user": {}}
+            else:return {"status": "OK", "user": researched_users}
         else:
             return {'status': 'TOKEN_INVALID | NOT_FOUND', 'user': {}}
 
@@ -449,3 +464,4 @@ class GroupManager:
             self.db.cursor.execute('DELETE FROM group_messages WHERE group_name = ?', (group_name,))
             self.db.connection.commit()
         return {'status': 'OK', 'group_name': group_name}
+    
