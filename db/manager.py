@@ -194,6 +194,26 @@ class UserManager:
         else:
             return {'status': 'TOKEN_INVALID | NOT_FOUND', 'user': {}}
         
+    def authenticate_username(self, username: str):
+        self.db.cursor.execute('SELECT * FROM users WHERE username = ?', (username,))
+        user = self.db.cursor.fetchone()
+        if user:
+            return {
+                'status': 'OK', 
+                'user': 
+                {
+                    'username': username,
+                    'fullname': user[2], 
+                    'status': user[3],
+                    'phone_number': user[1],
+                    'bio': user[4],
+                    'profile': user[5],
+                    'very': user[6]
+                }
+            }
+        else:
+            return {'status': 'TOKEN_INVALID | NOT_FOUND', 'user': {}}
+        
     def username_access(self, username: str):
         self.db.cursor.execute('SELECT * FROM users WHERE username = ?', (username,))
         user = self.db.cursor.fetchone()
@@ -292,7 +312,7 @@ class ChatManager:
 
     def editMessage(self, from_user: str, to_user: str, message_id: str, new_message: str = ""):
         new_message = new_message.strip()
-        if self.user_manager.username_access(to_user)['status'] == 'OK' and self.user_manager.username_access(from_user)['status'] == 'OK':
+        if self.user.authenticate_username(to_user)['status'] == 'OK' and self.user.authenticate_username(from_user)['status'] == 'OK':
             to_chats = self._get_chats(to_user)
             from_chats = self._get_chats(from_user)
             if from_user in list(to_chats.keys()) and to_user in list(from_chats.keys()):

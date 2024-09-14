@@ -33,9 +33,9 @@ class Handler:
     def getMembersList(self, group_name: str):
         return self.groupManager.get_group_members(group_name=group_name)    
     
-    def editMessages(self, username: str, token: str, to: str, message_id: str, newMessage: str):
+    def editMessages(self, username: str, to: str, message_id: str, newMessage: str):
         print(f"TO {to}, message_id : {message_id}, newMessage: {newMessage}")
-        return self(username=username, token=token, message_id=message_id, new_message=newMessage, to_user=to)
+        return self.chatManager.editMessage(from_user=username, to_user=to, new_message=newMessage, message_id=message_id)
     
     def getMessages(self, username: str, token: str, user: str):
         return self.chatManager.getMessages(username=username, auth_token=token, user=user)
