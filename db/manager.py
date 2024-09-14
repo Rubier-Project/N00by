@@ -210,11 +210,11 @@ class UserManager:
         else:
             return {'status': 'TOKEN_INVALID | NOT_FOUND', 'user': {}}
 
-    def login(self, username, auth_token, phone_number):
-        self.db.cursor.execute('SELECT * FROM users WHERE username = ? AND token = ? AND phone = ?', (username, auth_token, trimPhoneumber(phone_number)))
+    def login(self, username, phone_number):
+        self.db.cursor.execute('SELECT * FROM users WHERE username = ? AND phone = ?', (username, trimPhoneumber(phone_number)))
         user = self.db.cursor.fetchone()
         if user:
-            return {'status': 'OK', 'user': {'username': username}}
+            return {'status': 'OK', 'user': user}
         else:
             return {'status': 'TOKEN_INVALID | NOT_FOUND', 'user': {}}
 
@@ -289,6 +289,37 @@ class ChatManager:
                 DO UPDATE SET chats = excluded.chats
             ''', (username, json.dumps(chats)))
             self.db.connection.commit()
+
+    def editMessage(self, from_user: str, to_user: str, message_id: str, new_message: str = ""):
+        new_message = new_message.strip()
+        if self.user_manager.username_access(to_user)['status'] == 'OK' and self.user_manager.username_access(from_user)['status'] == 'OK':
+            to_chats = self._get_chats(to_user)
+            from_chats = self._get_chats(from_user)
+            if from_user in list(to_chats.keys()) and to_user in list(from_chats.keys()):
+                if message_id in list(to_chats[from_user].keys()) and message_id in list(from_chats[to_user].keys()):
+                    to_message: dict = to_chats[from_user][message_id]
+                    to_message['message'] = new_message
+                    
+                    from_message: dict = from_chats[to_user][message_id]
+                    from_message['message'] = new_message
+            
+                    self.db.cursor.execute('''
+UPDATE user_chats SET chats = ? WHERE username = ?''', (json.dumps(to_chats), to_user))
+                    self.db.cursor.execute('''
+UPDATE user_chats SET chats = ? WHERE username = ?''', (json.dumps(from_chats), from_user))
+                    
+                    self.db.commit()
+
+                    return {"status": "OK", "message": {
+                        "from": from_user,
+                        "to": to_user,
+                        "message_id": message_id,
+                        "current_message": new_message
+                    }}
+
+                else:return {"status": "UNREACHABLE_MESSAGE", "message": {}}
+            else:return {"status": "UNREACHABLE_CHAT", "message": {}}
+        else:return {"status": "USER_NOT_FOUND", "message": {}}
 
     def sendMessage(self, from_user, to_user, message, message_id, timestamp=None, reply=None):
         if self.user_manager.username_access(to_user)['status'] == 'OK':

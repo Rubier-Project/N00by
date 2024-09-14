@@ -13,8 +13,8 @@ class Handler:
     def getUserInfo(self, username: str, token: str):
         return self.userManager.authenticate_user(username=username, auth_token=token)
     
-    def login(self, username: str, token: str, phone_number):
-        return self.userManager.login(username=username, auth_token=token, phone_number=phone_number)
+    def login(self, username:str, phone_number):
+        return self.userManager.login(username=username, phone_number=phone_number)
     
     def getUsernameByID(self, username: str, token: str, getUser: str):
         return self.userManager.getUsernameByID(username=username, auth_token=token, getUser=getUser)
@@ -35,7 +35,7 @@ class Handler:
     
     def editMessages(self, username: str, token: str, to: str, message_id: str, newMessage: str):
         print(f"TO {to}, message_id : {message_id}, newMessage: {newMessage}")
-        return self.chatManager.edit_message(username=username, token=token, message_id=message_id, new_message=newMessage, to_user=to)
+        return self(username=username, token=token, message_id=message_id, new_message=newMessage, to_user=to)
     
     def getMessages(self, username: str, token: str, user: str):
         return self.chatManager.getMessages(username=username, auth_token=token, user=user)

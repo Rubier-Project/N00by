@@ -96,7 +96,7 @@ def handle_login(data: dict):
     try:
         user_manager = UserManager()
         keys: list = list(data.keys())
-        if not "username" in keys or not "token" in keys or not "phone_number" in keys:
+        if not "phone_number" in keys or not "username" in keys:
             emit("error", {"message": "Invalid arguments - Not found arguments"})
         else:
             phone = trimPhoneumber(data.get("phone_number"))
@@ -114,7 +114,7 @@ def handle_login(data: dict):
                         user_manager = UserManager()
                         handler = Handler(chatManager=ChatManager(UserManager()), userManager=user_manager)
                         
-                        result = handler.login(data.get("username"), data.get("token"), data.get("phone_number"))
+                        result = handler.login(data.get("username"), data.get("phone_number"))
                         if result['status'] == "OK":
                             del result['status']
                             emit("logined", result['user'], to=request.sid)
